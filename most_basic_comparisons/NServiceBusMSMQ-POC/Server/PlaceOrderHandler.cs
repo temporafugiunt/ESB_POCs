@@ -7,18 +7,19 @@ namespace Server
 {
     public class PlaceOrderHandler : IHandleMessages<PlaceOrder>
     {
-        static ILog log = LogManager.GetLogger<PlaceOrderHandler>();
+        private static ILog _log = LogManager.GetLogger<PlaceOrderHandler>();
+        private static int _processingCount;
 
         public Task Handle(PlaceOrder message, IMessageHandlerContext context)
         {
-            log.Info($"Order for Product:{message.Product} placed with id: {message.Id}");
-            log.Info($"Publishing: OrderPlaced for Order Id: {message.Id}");
+            _processingCount++;
 
-            var orderPlaced = new OrderPlaced
-            {
-                OrderId = message.Id
-            };
-            return context.Publish(orderPlaced);
+            _log.Info($"RECV {nameof(PlaceOrder)} [{_processingCount}], {nameof(message.Id)}: {message.Id}");
+
+            var orderPlaced = new OrderPlaced {OrderId = message.Id};
+            var task = context.Publish(orderPlaced);
+            _log.Info($"POST {nameof(OrderPlaced)} [{_processingCount}], {nameof(orderPlaced.OrderId)}: {orderPlaced.OrderId}");
+            return task;
         }
     }
 }

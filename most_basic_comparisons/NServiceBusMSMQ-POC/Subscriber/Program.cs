@@ -4,14 +4,14 @@ using NServiceBus;
 
 namespace Subscriber
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             AsyncMain().GetAwaiter().GetResult();
         }
 
-        static async Task AsyncMain()
+        private static async Task AsyncMain()
         {
             Console.Title = "NServiceBusMSMQ-POC.Subscriber";
             var endpointConfiguration = new EndpointConfiguration("Samples.StepByStep.Subscriber");

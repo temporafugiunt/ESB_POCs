@@ -1,81 +1,63 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using MassTransit;
 using Shared;
 
 namespace Client
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             AsyncMain().GetAwaiter().GetResult();
         }
 
-        static async Task AsyncMain()
+        private static async Task AsyncMain()
         {
             // This makes it easier to tell console windows apart
             Console.Title = "MassTransitRabitMQ-POC.Client";
 
             var bus = BusConfigurator.ConfigureBus();
-
+            await bus.StartAsync();
             var sendToUri = new Uri(RabbitMqServerConstants.RabbitMqUri + RabbitMqQueueNames.OrderPublicationQueue);
             var endpointInstance = await bus.GetSendEndpoint(sendToUri);
 
-            await SendOrders(endpointInstance);
+            try
+            {
+                await SendOrders(endpointInstance);
+            }
+            finally
+            {
+                await bus.StopAsync();
+            }
         }
 
         private static int _processingCount = 0;
 
         private static async Task SendOrders(ISendEndpoint endpointInstance)
         {
-            Console.WriteLine("Press enter to send 1 message or a number + enter to send X messages.");
-            Console.WriteLine("Type 'exit' to exit");
-            Console.WriteLine();
+            Console.WriteLine("Press enter to send a message");
+            Console.WriteLine("Press any key to exit");
 
             while (true)
             {
-                var keys = Console.ReadLine();
-                int count;
+                var key = Console.ReadKey();
+                Console.WriteLine();
 
-                if (keys == "")
-                {
-                    count = 1;
-                }
-                else if (string.Compare(keys, "exit", StringComparison.InvariantCultureIgnoreCase) == 0)
+                if (key.Key != ConsoleKey.Enter)
                 {
                     return;
                 }
-                else
+                var id = Guid.NewGuid();
+
+                await endpointInstance.Send<IPlaceOrderCommand>(new
                 {
-                    if (!int.TryParse(keys, out count))
-                    {
-                        await Console.Out.WriteLineAsync("Not Recognized.");
-                    }
-                }
-                var messageSent = false;
-                var sw = StopwatchExtensions.CreateStartSW();
-                for (var inc = 0; inc < count; inc++)
-                {
-                    await SendOrder(endpointInstance, count > 1 && inc != count -1);
-                }
-                await sw.LogTimeToConsoleAsync($"All {count} message[s] sent.");
+                    Product = "New shoes",
+                    Id = id
+                });
+                _processingCount++;
+                await Console.Out.WriteLineAsync($"POST {nameof(IPlaceOrderCommand)} [{_processingCount}], {nameof(IPlaceOrderCommand.Id)}: {id:N}");
             }
-        }
-
-        private static async Task SendOrder(ISendEndpoint endpointInstance, bool isGrouped)
-        {
-            var id = Guid.NewGuid();
-
-            await endpointInstance.Send<IPlaceOrderCommand>(new
-            {
-                Product = "New shoes",
-                Id = id,
-                IsGrouped = isGrouped
-            });
-            _processingCount++;
-            await Console.Out.WriteLineAsync($"{_processingCount} - Sent a PlaceOrder message with id: {id:N} isGrouped:{isGrouped}");
         }
     }
 }

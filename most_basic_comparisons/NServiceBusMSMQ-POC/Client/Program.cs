@@ -5,14 +5,14 @@ using Shared;
 
 namespace Client
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             AsyncMain().GetAwaiter().GetResult();
         }
 
-        static async Task AsyncMain()
+        private static async Task AsyncMain()
         {
             // This makes it easier to tell console windows apart
             Console.Title = "NServiceBusMSMQ-POC.Client";
@@ -39,7 +39,7 @@ namespace Client
                 .ConfigureAwait(false);
             try
             {
-                await SendOrder(endpointInstance);
+                await SendOrders(endpointInstance);
             }
             finally
             {
@@ -48,7 +48,8 @@ namespace Client
             }
         }
 
-        static async Task SendOrder(IEndpointInstance endpointInstance)
+        private static int _processingCount = 0;
+        private static async Task SendOrders(IMessageSession endpointInstance)
         {
             Console.WriteLine("Press enter to send a message");
             Console.WriteLine("Press any key to exit");
@@ -70,7 +71,8 @@ namespace Client
                     Id = id
                 };
                 await endpointInstance.Send("Samples.StepByStep.Server", placeOrder);
-                Console.WriteLine($"Sent a PlaceOrder message with id: {id:N}");
+                _processingCount++;
+                await Console.Out.WriteLineAsync($"POST {nameof(PlaceOrder)} [{_processingCount}], {nameof(placeOrder.Id)}: {placeOrder.Id:N}");
             }
         }
     }

@@ -5,14 +5,14 @@ using MassTransit;
 
 namespace Server
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             AsyncMain().GetAwaiter().GetResult();
         }
 
-        static async Task AsyncMain()
+        private static async Task AsyncMain()
         {
             Console.Title = "MassTransitRabitMQ-POC.Server";
             var bus = BusConfigurator.ConfigureBus((cfg, host) =>

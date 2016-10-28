@@ -1,20 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using NServiceBus;
 
 namespace Subscriber2
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             AsyncMain().GetAwaiter().GetResult();
         }
 
-        static async Task AsyncMain()
+        private static async Task AsyncMain()
         {
             Console.Title = "NServiceBusMSMQ-POC.Subscriber2";
             var endpointConfiguration = new EndpointConfiguration("Samples.StepByStep.Subscriber2");
